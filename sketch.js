@@ -1,225 +1,210 @@
-let myImage1;
-let myImage2;
-let dot1={x:[], y:[]};
-let col1=[];
-let dot2={x:[], y:[]};
-let col2=[];
-let mySong;
-let cursMin;
-let cursMax;
-let startGame = false;
-let amplitudeLevel = 1;
-let musicStop = false;
-let myB=[];
-let ii=0;
-
+var gap=30;
+var dotSize= 25
+var sliderCol= ('red')
+var activeColor = 0;
+var dot = [];
+var img
 
 function preload(){
-  myImage1 = loadImage("./assets/images/imageDesk.jpg");
-  myImage2 = loadImage("./assets/images/imageDesk.jpg");
-  mySong = loadSound("./assets/sound/music.mp3");
+  img1=loadImage('./assets/img/img1.png');
+  img2=loadImage('./assets/img/img2.png');
+  img3=loadImage('./assets/img/img3.png');
+  dotImg=loadImage('./assets/img/dot');
+  sound = loadSound('assets/sounds/click_1.mp3');
 }
-
 
 function setup() {
-  background(255);
-  createCanvas(windowWidth,windowHeight);
+  createCanvas(windowWidth,windowHeight)
+  background(230)
+  imageMode(CENTER)
 
-  cursMin = width/25*20;
-  cursMax = width/25*21;
+  img=img1
 
-  //image
-  image(myImage1, 0, 0);
-  myImage2.filter("invert");
-  image(myImage2, 0, 0);
+  for (var x = 100; x < windowWidth-100; x+=gap) {
+    for (var y = 100; y < windowHeight-100; y+=gap) {
+      dot.push(new Dot(x, y, demo=false, img));
+      push()
+      noStroke()
+      fill(150)
+      ellipse(x,y,10)
+      pop()
+    }
+  }
 
-  analyzer = new p5.Amplitude();
-  analyzer.setInput(mySong);
+  title=createP('Draw with nails!')
+  title.position(50,25)
 
-  //puntini
-  const d = 20;
-  for (let x = d; x < width; x += d) {
-    for (let y = d; y < height; y += d) {
+  subtitle=createP('(click on the board to plug them – change color with the rgb sliders – follow the demo image if you want)')
+  subtitle.position(250,35)
+  subtitle.style('font-size', '8pt')
 
-      let c1 = myImage1.get(x,y);
-      col1.push(c1);
-      dot1.x.push(x);
-      dot1.y.push(y);
-      let c2 = myImage2.get(x,y);
-      col2.push(c2);
-      dot2.x.push(x);
-      dot2.y.push(y);
+  sliderR=createSlider(0,255,125)
+  sliderR.position(120,windowHeight-75)
+  sliderR.input(getcolor)
+  sliderG=createSlider(0,255,125)
+  sliderG.input(getcolor)
+  sliderG.position(120,windowHeight-50)
+  sliderB=createSlider(0,255,125)
+  sliderB.position(120,windowHeight-25)
+  sliderB.input(getcolor)
+
+  r=createP('R')
+  r.position(95,windowHeight-100)
+  g=createP('G')
+  g.position(95,windowHeight-75)
+  b=createP('B')
+  b.position(95,windowHeight-50)
+
+  btnDemo0=createButton('CLEAN');
+  btnDemo0.position(windowWidth/2-90-37,windowHeight-55);
+  btnDemo0.mouseClicked(demo0)
+  btnDemo1=createButton('DEMO1');
+  btnDemo1.position(windowWidth/2-37,windowHeight-55)
+  btnDemo1.mouseClicked(demo1)
+  btnDemo2=createButton('DEMO2');
+  btnDemo2.position(windowWidth/2+90-37,windowHeight-55)
+  btnDemo2.mouseClicked(demo2)
+}
+
+function draw() {
+    for (var i = 0; i < dot.length; i++) {
+      if (isOver(dot[i])) {
+        dot[i].active = true;
+        dot[i].update();
+      } else {
+        dot[i].active = false;
+      }
+      dot[i].display();
+    }
+
+    dot.push(new Dot(280,windowHeight-47, demo=true));
+}
+
+function isOver(temp_dot) {
+  let dot = temp_dot;
+  if (
+    ((dot.x - dotSize/2) < mouseX) &&
+    ((dot.x + dotSize/2)> mouseX) &&
+    ((dot.y - dotSize/2) < mouseY) &&
+    ((dot.y + dotSize/2) > mouseY)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function mouseClicked() {
+  for (var i = 0; i < dot.length; i++) {
+    if (dot[i].active) {
+      dot[i].plugged = sliderCol;
+      dot[i].built = true;
+      sound.play()
     }
   }
 }
 
+function getcolor() {
+  sliderCol='rgb('+ sliderR.value()+ ',' +sliderG.value()+ ',' +sliderB.value()+ ')'
+}
 
-function draw() {
-  background(255);
+class Dot {
+  constructor(temp_x, temp_y, demo, img) {
+    this.x = temp_x;
+    this.y = temp_y;
+    this.active = false;
+    this.built = false;
+    this.activeColor = sliderCol;
+    this.plugged = sliderCol;
+    this.demo=demo
+    this.img=img
+  }
 
-  var volume = 0;
-  volume = analyzer.getLevel();
-  volume = map(volume,0,1,0,50);
-
-  //stop e play
-  if ((mouseX>(cursMin+((cursMax-cursMin)/2))-((cursMax-cursMin)*0.8)) &&
-  (mouseX<(cursMin+((cursMax-cursMin)/2))+((cursMax-cursMin)*0.8)) &&
-  (mouseY<((height/3*2)+height/20)+((cursMax-cursMin)*0.8)) &&
-  (mouseY>((height/3*2)+height/20)-((cursMax-cursMin)*0.8)) ){
-    musicStop = true;
-  } else if ((mouseX>(cursMin+((cursMax-cursMin)/2))-((cursMax-cursMin)*0.8)) &&
-  (mouseX<(cursMin+((cursMax-cursMin)/2))+((cursMax-cursMin)*0.8)) &&
-  (mouseY<((height/3*2)+height/20*2)+((cursMax-cursMin)*0.8)) &&
-  (mouseY>((height/3*2)+height/20*2)-((cursMax-cursMin)*0.8)) ){
-    musicStop=false};
-  mySong.amp(amplitudeLevel);
-
-  //rate
-    let rateLevel = 1;
-    if ((mouseX>cursMin && mouseX<cursMax) && (mouseY>height/3 && mouseY<height/3*2) && mouseIsPressed ==true) {
-      rateLevel = map(mouseY,height/3,height/3*2,1,2);
-      mySong.rate(rateLevel);
-    } else {
-      rateLevel = 1;
-      mySong.rate(rateLevel);
+  display() {
+    if (this.active) {
+      tint(color(this.activeColor));
+      image(dotImg, this.x, this.y, dotSize, dotSize);
+    } else if (this.built) {
+      tint(color(this.plugged));
+      image(dotImg, this.x, this.y, dotSize, dotSize);
+    } else if (this.demo==true) {
+      tint(color(this.activeColor));
+      image(dotImg, this.x, this.y, dotSize, dotSize)
     }
 
-    if (mySong.isPlaying()==true){
-      if (rateLevel<1.7){
-        push();
-        for(let s = 0; s < dot1.x.length; s++){
-          noStroke();
-          fill(col1[s]);
-          ellipse(dot1.x[s], dot1.y[s], volume+10);
-        }
-        pop();
-      }
+    else {
+      push()
+      noStroke()
+      fill(230)
+      rect(this.x-15,this.y-15,30,30)
+      pop()
 
-      if (rateLevel>1.3){
-        push();
-        for(let s = 0; s < dot2.x.length; s++){
-          noStroke();
-          fill(col2[s]);
-          ellipse(dot2.x[s]+10, dot2.y[s]+10, volume+10);
-        }
-        pop();
-      }
-    }
+      //guide col
+      let c1 = this.img.get(this.x,this.y)
+      noStroke()
+      push()
+      fill(c1)
+      ellipse(this.x,this.y,dotSize)
+      pop()
+      //alpha
+      push()
+      fill(230,200)
+      ellipse(this.x,this.y,dotSize)
+      pop()
 
-  //cursori
-    if (startGame == true){
-      push();
-      noStroke();
-      fill(0);
-      rect(cursMin,height/3,cursMax-cursMin,(height/3*2)-height/3, width/10);
-      fill(255);
-      if ((mouseX>cursMin && mouseX<cursMax) && (mouseY>height/3 && mouseY<height/3*2) && mouseIsPressed ==true) {
-        ellipse(cursMin+((cursMax-cursMin)/2),mouseY,(cursMax-cursMin)*0.8);
-      } else {
-        ellipse(cursMin+((cursMax-cursMin)/2), height/3*1.1, (cursMax-cursMin)*0.8)
-      }
-      pop();
-
-      push();
-      fill(255);
-      textAlign(CENTER,CENTER);
-      textSize((cursMax-cursMin)*0.3);
-      text("RATE", cursMin+((cursMax-cursMin)/2), height/2);
-      pop();
-
-      push();
-      noStroke();
-      if (amplitudeLevel==1){fill(100)} else {fill(0)};
-      ellipse(cursMin+((cursMax-cursMin)/2), (height/3*2)+height/20, (cursMax-cursMin)*0.8);
-      pop();
-
-      push();
-      fill(255);
-      textAlign(CENTER,CENTER);
-      textSize((cursMax-cursMin)*0.4);
-      textStyle(BOLD);
-      text("| |", cursMin+((cursMax-cursMin)/2), (height/3*2)+height/20);
-      pop();
-
-      push();
-      noStroke();
-      if (amplitudeLevel==1){fill(0)} else {fill(100)};
-      ellipse(cursMin+((cursMax-cursMin)/2), (height/3*2)+height/20*2.5, (cursMax-cursMin)*0.8);
-      pop();
-
-      push();
-      fill(255);
-      textAlign(CENTER,CENTER);
-      textSize((cursMax-cursMin)*0.4);
-      textStyle(BOLD);
-      text(">", cursMin+((cursMax-cursMin)/2), (height/3*2)+height/20*2.5);
-      pop();
-
-      push();
-      noStroke();
-      if (amplitudeLevel==1){fill(0)} else {fill(100)};
-      rectMode(CENTER);
-      rect(cursMin+((cursMax-cursMin)/2), (height/3*2)+height/20*5, (cursMax-cursMin)*4,(cursMax-cursMin)*0.8, width/10);
-      pop();
-
-      push();
-      fill(255);
-      textAlign(CENTER,CENTER);
-      textSize((cursMax-cursMin)*0.4);
-      textStyle(BOLD);
-      text("click for bones", cursMin+((cursMax-cursMin)/2), (height/3*2)+height/20*5);
-      pop();
-    }
-
-    for(let i = 0; i < myB.length; i++) {
-    myB[i].display();
-    myB[i].updating();
-  }
-  }
-
-// al click
-  function mouseClicked(){
-
-    addB();
-    ii++;
-
-    if (musicStop==true){
-      amplitudeLevel = 0
-    } else {amplitudeLevel = 1}
-
-    if (mySong.isPlaying() == false) {
-      mySong.play();
-      startGame = true;
+      push()
+      noStroke()
+      fill(150)
+      ellipse(this.x,this.y,10)
+      pop()
     }
   }
-
-
-  //aggiungi Ball
-  function addB() {
-    const aB = new Ball (width/3+random(-200,200), height/4+random(-50,50));
-    myB.push(aB);
+  update(temp_color) {
+    this.activeColor = sliderCol;
   }
+}
 
+function demo0(){
+  img=img1
+  console.log('img3')
+  for (var x = 100; x < windowWidth-100; x+=gap) {
+    for (var y = 100; y < windowHeight-100; y+=gap) {
+      dot.push(new Dot(x, y, demo=false, img));
+      push()
+      noStroke()
+      fill(150)
+      ellipse(x,y,10)
+      pop()
+    }}
+}
 
-  //generatore fiocchi
-class Ball {
-    constructor(temp_x1, temp_y1){
-    this.x1 = temp_x1;
-    this.y1 = temp_y1;
-  }
+function demo1(){
+  img=img2
+  console.log('img3')
+  for (var x = 100; x < windowWidth-100; x+=gap) {
+    for (var y = 100; y < windowHeight-100; y+=gap) {
+      dot.push(new Dot(x, y, demo=false, img));
+      push()
+      noStroke()
+      fill(150)
+      ellipse(x,y,10)
+      pop()
+    }}
+}
 
-  display(){
-    fill(255, 246, 197);
-    noStroke();
-    ellipse(this.x1, this.y1, 20);
-    ellipse(this.x1, this.y1+20, 20);
-    ellipse(this.x1+50, this.y1, 20);
-    ellipse(this.x1+50, this.y1+20, 20);
-    rect(this.x1, this.y1, 50, 20)
-  }
+function demo2(){
+  img=img3
+  console.log('img3')
+  for (var x = 100; x < windowWidth-100; x+=gap) {
+    for (var y = 100; y < windowHeight-100; y+=gap) {
+      dot.push(new Dot(x, y, demo=false, img));
+      push()
+      noStroke()
+      fill(150)
+      ellipse(x,y,10)
+      pop()
+    }}
+}
 
-  //caduta fiocchi
-  updating(){
-    this.y1 = this.y1+3;
-  }
+function windowResized(){
+  resizeCanvas(windowWidth,windowHeight)
 }
